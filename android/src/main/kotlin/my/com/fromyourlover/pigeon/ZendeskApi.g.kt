@@ -48,19 +48,211 @@ class FlutterError (
   override val message: String? = null,
   val details: Any? = null
 ) : Throwable()
-private open class ZendeskApiPigeonCodec : StandardMessageCodec() {
-  override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
-    return     super.readValueOfType(type, buffer)
-  }
-  override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
-    super.writeValue(stream, value)
+
+enum class ZendeskEvent(val raw: Int) {
+  AUTHENTICATION_FAILED(0),
+  CONNECTION_STATUS_CHANGED(1),
+  CONVERSATION_ADDED(2),
+  FIELD_VALIDATION_FAILED(3),
+  SEND_MESSAGE_FAILED(4),
+  UNREAD_MESSAGE_COUNT_CHANGED(5);
+
+  companion object {
+    fun ofRaw(raw: Int): ZendeskEvent? {
+      return values().firstOrNull { it.raw == raw }
+    }
   }
 }
 
-/** Generated interface from Pigeon that represents a handler of messages from Flutter. */
+/**
+ * Represents a user in the Zendesk system.
+ *
+ * This class stores the unique identifier (`id`) and an external identifier (`externalId`)
+ * for a user. It is typically returned after authenticating a user with the Zendesk SDK.
+ *
+ * See also:
+ * - [ZendeskHostApi.signIn]: Authenticates a user and returns a [ZendeskUser].
+ *
+ * Generated class from Pigeon that represents data sent in messages.
+ */
+data class ZendeskUser (
+  /**
+   * The unique identifier for the user in Zendesk.
+   *
+   * This ID is assigned by Zendesk and is used to uniquely identify the user
+   * within the Zendesk system.
+   */
+  val id: String,
+  /**
+   * The external identifier for the user.
+   *
+   * This ID is used to map the user to an external system (e.g., a CRM or another database).
+   * It is typically provided by the application integrating with Zendesk.
+   */
+  val externalId: String
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): ZendeskUser {
+      val id = pigeonVar_list[0] as String
+      val externalId = pigeonVar_list[1] as String
+      return ZendeskUser(id, externalId)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      id,
+      externalId,
+    )
+  }
+}
+private open class ZendeskApiPigeonCodec : StandardMessageCodec() {
+  override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
+    return when (type) {
+      129.toByte() -> {
+        return (readValue(buffer) as Long?)?.let {
+          ZendeskEvent.ofRaw(it.toInt())
+        }
+      }
+      130.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          ZendeskUser.fromList(it)
+        }
+      }
+      else -> super.readValueOfType(type, buffer)
+    }
+  }
+  override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
+    when (value) {
+      is ZendeskEvent -> {
+        stream.write(129)
+        writeValue(stream, value.raw)
+      }
+      is ZendeskUser -> {
+        stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      else -> super.writeValue(stream, value)
+    }
+  }
+}
+
+
+/**
+ * A host API for interacting with the Zendesk SDK from Flutter.
+ *
+ * This class provides methods to initialize the Zendesk SDK, open a chat session,
+ * authenticate users with JWT, and retrieve unread message counts.
+ * It also allows enabling or disabling logging for debugging purposes.
+ *
+ * Example:
+ * ```dart
+ * final zendesk = ZendeskHostApi();
+ * await zendesk.initialize(androidAppId: 'your-android-app-id');
+ * zendesk.openChat();
+ * ```
+ *
+ *
+ * Generated interface from Pigeon that represents a handler of messages from Flutter.
+ */
 interface ZendeskHostApi {
-  fun initialize(androidAppId: String?, iosAppId: String?)
+  /**
+   * Initializes the Zendesk SDK.
+   *
+   * Throws a [PlatformException] if initialization fails (e.g., invalid app ID).
+   * Otherwise, prepares the SDK for use with the provided app IDs.
+   *
+   * Equivalent to setting up the SDK with the required configuration for Android or iOS.
+   *
+   * Example:
+   * ```dart
+   * await zendesk.initialize(androidAppId: 'your-android-app-id');
+   * ```
+   *
+   * See also:
+   * - [signIn]: Authenticates a user with a JWT token.
+   * - [openChat]: Opens the Zendesk chat interface.
+   */
+  fun initialize(androidAppId: String?, iosAppId: String?, callback: (Result<Unit>) -> Unit)
+  /**
+   * Opens the Zendesk chat interface.
+   *
+   * Throws a [PlatformException] if the chat interface cannot be opened
+   * (e.g., SDK not initialized). Otherwise, launches the chat UI for users to
+   * interact with support agents.
+   *
+   * Equivalent to starting a chat session in the Zendesk SDK.
+   *
+   * Example:
+   * ```dart
+   * zendesk.openChat();
+   * ```
+   *
+   * See also:
+   * - [initialize]: Prepares the SDK for use.
+   * - [signIn]: Authenticates a user before opening the chat.
+   */
   fun openChat()
+  /**
+   * Authenticates a user with a JSON Web Token (JWT).
+   *
+   * - [jwt]: The JWT token for user authentication.
+   *
+   * Throws a [PlatformException] if authentication fails (e.g., invalid JWT).
+   * Otherwise, returns a [ZendeskUser] representing the authenticated user.
+   *
+   * Equivalent to validating the JWT and creating a user session in the ZendeskUser representing the authenticated user.
+   *
+   * Example:
+   * ```dart
+   * final user = await zendesk.signIn('your-jwt-token');
+   * print('Authenticated user: ${user.name}');
+   * ```
+   *
+   * See also:
+   * - [initialize]: Prepares the SDK for use.
+   * - [openChat]: Opens the chat interface after authentication.
+   */
+  fun signIn(jwt: String, callback: (Result<ZendeskUser>) -> Unit)
+  /**
+   * Retrieves the number of unread messages in the user's chat history.
+   *
+   * Returns an number representing the count of unread messages.
+   *
+   * Throws a [PlatformException] if the message count cannot be retrieved
+   * (e.g., SDK not initialized).
+   *
+   * Equivalent to querying the Zendesk SDK for unread messages.
+   *
+   * Example:
+   * ```dart
+   * final unreadCount = await zendesk.getUnreadMessageCount();
+   * print('Unread messages: $unreadCount');
+   * ```
+   *
+   * See also:
+   * - [openChat]: Opens the chat interface.
+   * - [signIn]: Authenticates the user before retrieving messages.
+   */
+  fun getUnreadMessageCount(callback: (Result<Long>) -> Unit)
+  /**
+   * Enables or disables logging for the Zendesk SDK.
+   *
+   * - [enabled]: If `true`, enables logging. If `false`, disables logging.
+   *
+   * See also:
+   * - [loggingEnabled]: Checks whether logging is currently enabled.
+   */
+  fun enableLogging(enabled: Boolean)
+  /**
+   * Whether logging is currently enabled for the Zendesk SDK.
+   *
+   * Returns [true] if logging is enabled, otherwise [false].
+   *
+   * See also:
+   * - [enableLogging]: Enables or disables logging for the Zendesk SDK.
+   */
+  fun loggingEnabled(): Boolean
 
   companion object {
     /** The codec used by ZendeskHostApi. */
@@ -78,13 +270,14 @@ interface ZendeskHostApi {
             val args = message as List<Any?>
             val androidAppIdArg = args[0] as String?
             val iosAppIdArg = args[1] as String?
-            val wrapped: List<Any?> = try {
-              api.initialize(androidAppIdArg, iosAppIdArg)
-              listOf(null)
-            } catch (exception: Throwable) {
-              wrapError(exception)
+            api.initialize(androidAppIdArg, iosAppIdArg) { result: Result<Unit> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                reply.reply(wrapResult(null))
+              }
             }
-            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)
@@ -106,15 +299,103 @@ interface ZendeskHostApi {
           channel.setMessageHandler(null)
         }
       }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signIn$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val jwtArg = args[0] as String
+            api.signIn(jwtArg) { result: Result<ZendeskUser> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.getUnreadMessageCount$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            api.getUnreadMessageCount{ result: Result<Long> ->
+              val error = result.exceptionOrNull()
+              if (error != null) {
+                reply.reply(wrapError(error))
+              } else {
+                val data = result.getOrNull()
+                reply.reply(wrapResult(data))
+              }
+            }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.enableLogging$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val enabledArg = args[0] as Boolean
+            val wrapped: List<Any?> = try {
+              api.enableLogging(enabledArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.loggingEnabled$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.loggingEnabled())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
     }
   }
 }
 /** Generated class from Pigeon that represents Flutter messages that can be called from Kotlin. */
-class ZendeskFlutterApi(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
+class ZendeskListener(private val binaryMessenger: BinaryMessenger, private val messageChannelSuffix: String = "") {
   companion object {
-    /** The codec used by ZendeskFlutterApi. */
+    /** The codec used by ZendeskListener. */
     val codec: MessageCodec<Any?> by lazy {
       ZendeskApiPigeonCodec()
+    }
+  }
+  fun onEvent(eventArg: ZendeskEvent, callback: (Result<Unit>) -> Unit)
+{
+    val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
+    val channelName = "dev.flutter.pigeon.zendesk_plus.ZendeskListener.onEvent$separatedMessageChannelSuffix"
+    val channel = BasicMessageChannel<Any?>(binaryMessenger, channelName, codec)
+    channel.send(listOf(eventArg)) {
+      if (it is List<*>) {
+        if (it.size > 1) {
+          callback(Result.failure(FlutterError(it[0] as String, it[1] as String, it[2] as String?)))
+        } else {
+          callback(Result.success(Unit))
+        }
+      } else {
+        callback(Result.failure(createConnectionError(channelName)))
+      } 
     }
   }
 }

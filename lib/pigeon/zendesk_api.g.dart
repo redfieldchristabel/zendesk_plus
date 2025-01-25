@@ -25,6 +25,56 @@ List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty
   return <Object?>[error.code, error.message, error.details];
 }
 
+enum ZendeskEvent {
+  authenticationFailed,
+  connectionStatusChanged,
+  conversationAdded,
+  fieldValidationFailed,
+  sendMessageFailed,
+  unreadMessageCountChanged,
+}
+
+/// Represents a user in the Zendesk system.
+///
+/// This class stores the unique identifier (`id`) and an external identifier (`externalId`)
+/// for a user. It is typically returned after authenticating a user with the Zendesk SDK.
+///
+/// See also:
+/// - [ZendeskHostApi.signIn]: Authenticates a user and returns a [ZendeskUser].
+class ZendeskUser {
+  ZendeskUser({
+    required this.id,
+    required this.externalId,
+  });
+
+  /// The unique identifier for the user in Zendesk.
+  ///
+  /// This ID is assigned by Zendesk and is used to uniquely identify the user
+  /// within the Zendesk system.
+  String id;
+
+  /// The external identifier for the user.
+  ///
+  /// This ID is used to map the user to an external system (e.g., a CRM or another database).
+  /// It is typically provided by the application integrating with Zendesk.
+  String externalId;
+
+  Object encode() {
+    return <Object?>[
+      id,
+      externalId,
+    ];
+  }
+
+  static ZendeskUser decode(Object result) {
+    result as List<Object?>;
+    return ZendeskUser(
+      id: result[0]! as String,
+      externalId: result[1]! as String,
+    );
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -33,6 +83,12 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
+    }    else if (value is ZendeskEvent) {
+      buffer.putUint8(129);
+      writeValue(buffer, value.index);
+    }    else if (value is ZendeskUser) {
+      buffer.putUint8(130);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -41,12 +97,30 @@ class _PigeonCodec extends StandardMessageCodec {
   @override
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
+      case 129: 
+        final int? value = readValue(buffer) as int?;
+        return value == null ? null : ZendeskEvent.values[value];
+      case 130: 
+        return ZendeskUser.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
   }
 }
 
+/// A host API for interacting with the Zendesk SDK from Flutter.
+///
+/// This class provides methods to initialize the Zendesk SDK, open a chat session,
+/// authenticate users with JWT, and retrieve unread message counts.
+/// It also allows enabling or disabling logging for debugging purposes.
+///
+/// Example:
+/// ```dart
+/// final zendesk = ZendeskHostApi();
+/// await zendesk.initialize(androidAppId: 'your-android-app-id');
+/// zendesk.openChat();
+/// ```
+///
 class ZendeskHostApi {
   /// Constructor for [ZendeskHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
@@ -60,6 +134,21 @@ class ZendeskHostApi {
 
   final String pigeonVar_messageChannelSuffix;
 
+  /// Initializes the Zendesk SDK.
+  ///
+  /// Throws a [PlatformException] if initialization fails (e.g., invalid app ID).
+  /// Otherwise, prepares the SDK for use with the provided app IDs.
+  ///
+  /// Equivalent to setting up the SDK with the required configuration for Android or iOS.
+  ///
+  /// Example:
+  /// ```dart
+  /// await zendesk.initialize(androidAppId: 'your-android-app-id');
+  /// ```
+  ///
+  /// See also:
+  /// - [signIn]: Authenticates a user with a JWT token.
+  /// - [openChat]: Opens the Zendesk chat interface.
   Future<void> initialize({String? androidAppId, String? iosAppId}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialize$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -82,6 +171,22 @@ class ZendeskHostApi {
     }
   }
 
+  /// Opens the Zendesk chat interface.
+  ///
+  /// Throws a [PlatformException] if the chat interface cannot be opened
+  /// (e.g., SDK not initialized). Otherwise, launches the chat UI for users to
+  /// interact with support agents.
+  ///
+  /// Equivalent to starting a chat session in the Zendesk SDK.
+  ///
+  /// Example:
+  /// ```dart
+  /// zendesk.openChat();
+  /// ```
+  ///
+  /// See also:
+  /// - [initialize]: Prepares the SDK for use.
+  /// - [signIn]: Authenticates a user before opening the chat.
   Future<void> openChat() async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.openChat$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -103,12 +208,190 @@ class ZendeskHostApi {
       return;
     }
   }
+
+  /// Authenticates a user with a JSON Web Token (JWT).
+  ///
+  /// - [jwt]: The JWT token for user authentication.
+  ///
+  /// Throws a [PlatformException] if authentication fails (e.g., invalid JWT).
+  /// Otherwise, returns a [ZendeskUser] representing the authenticated user.
+  ///
+  /// Equivalent to validating the JWT and creating a user session in the ZendeskUser representing the authenticated user.
+  ///
+  /// Example:
+  /// ```dart
+  /// final user = await zendesk.signIn('your-jwt-token');
+  /// print('Authenticated user: ${user.name}');
+  /// ```
+  ///
+  /// See also:
+  /// - [initialize]: Prepares the SDK for use.
+  /// - [openChat]: Opens the chat interface after authentication.
+  Future<ZendeskUser> signIn(String jwt) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signIn$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[jwt]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as ZendeskUser?)!;
+    }
+  }
+
+  /// Retrieves the number of unread messages in the user's chat history.
+  ///
+  /// Returns an number representing the count of unread messages.
+  ///
+  /// Throws a [PlatformException] if the message count cannot be retrieved
+  /// (e.g., SDK not initialized).
+  ///
+  /// Equivalent to querying the Zendesk SDK for unread messages.
+  ///
+  /// Example:
+  /// ```dart
+  /// final unreadCount = await zendesk.getUnreadMessageCount();
+  /// print('Unread messages: $unreadCount');
+  /// ```
+  ///
+  /// See also:
+  /// - [openChat]: Opens the chat interface.
+  /// - [signIn]: Authenticates the user before retrieving messages.
+  Future<int> getUnreadMessageCount() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.getUnreadMessageCount$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as int?)!;
+    }
+  }
+
+  /// Enables or disables logging for the Zendesk SDK.
+  ///
+  /// - [enabled]: If `true`, enables logging. If `false`, disables logging.
+  ///
+  /// See also:
+  /// - [loggingEnabled]: Checks whether logging is currently enabled.
+  Future<void> enableLogging([bool enabled = true]) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.enableLogging$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[enabled]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  /// Whether logging is currently enabled for the Zendesk SDK.
+  ///
+  /// Returns [true] if logging is enabled, otherwise [false].
+  ///
+  /// See also:
+  /// - [enableLogging]: Enables or disables logging for the Zendesk SDK.
+  Future<bool> loggingEnabled() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.loggingEnabled$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as bool?)!;
+    }
+  }
 }
 
-abstract class ZendeskFlutterApi {
+abstract class ZendeskListener {
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
 
-  static void setUp(ZendeskFlutterApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+  void onEvent(ZendeskEvent event);
+
+  static void setUp(ZendeskListener? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+    {
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.zendesk_plus.ZendeskListener.onEvent$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
+      if (api == null) {
+        pigeonVar_channel.setMessageHandler(null);
+      } else {
+        pigeonVar_channel.setMessageHandler((Object? message) async {
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.zendesk_plus.ZendeskListener.onEvent was null.');
+          final List<Object?> args = (message as List<Object?>?)!;
+          final ZendeskEvent? arg_event = (args[0] as ZendeskEvent?);
+          assert(arg_event != null,
+              'Argument for dev.flutter.pigeon.zendesk_plus.ZendeskListener.onEvent was null, expected non-null ZendeskEvent.');
+          try {
+            api.onEvent(arg_event!);
+            return wrapResponse(empty: true);
+          } on PlatformException catch (e) {
+            return wrapResponse(error: e);
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
+          }
+        });
+      }
+    }
   }
 }
