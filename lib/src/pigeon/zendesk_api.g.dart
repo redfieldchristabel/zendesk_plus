@@ -122,11 +122,11 @@ class _PigeonCodec extends StandardMessageCodec {
 /// zendesk.openChat();
 /// ```
 ///
-class ZendeskApi {
-  /// Constructor for [ZendeskApi].  The [binaryMessenger] named argument is
+class ZendeskHostApi {
+  /// Constructor for [ZendeskHostApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  ZendeskApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+  ZendeskHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
       : pigeonVar_binaryMessenger = binaryMessenger,
         pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
@@ -151,7 +151,7 @@ class ZendeskApi {
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
   Future<void> initialize({String? androidAppId, String? iosAppId}) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.initialize$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialize$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -189,7 +189,7 @@ class ZendeskApi {
   /// - [initialize]: Prepares the SDK for use.
   /// - [signIn]: Authenticates a user before opening the chat.
   Future<void> openChat() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.openChat$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.openChat$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -229,7 +229,7 @@ class ZendeskApi {
   /// - [initialize]: Prepares the SDK for use.
   /// - [openChat]: Opens the chat interface after authentication.
   Future<ZendeskUser> signIn(String jwt) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.signIn$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signIn$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -259,7 +259,7 @@ class ZendeskApi {
   ///
   /// Throws a [PlatformException] if signing out fails (e.g., SDK not initialized).
   Future<void> signOut() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.signOut$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signOut$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -294,12 +294,10 @@ class ZendeskApi {
   /// final unreadCount = await zendesk.getUnreadMessageCount();
   /// print('Unread messages: $unreadCount');
   /// ```
-  ///
-  /// See also:
-  /// - [openChat]: Opens the chat interface.
+  /// Opens the chat interface.
   /// - [signIn]: Authenticates the user before retrieving messages.
   Future<int> getUnreadMessageCount() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.getUnreadMessageCount$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.getUnreadMessageCount$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -330,7 +328,7 @@ class ZendeskApi {
   /// [ZendeskListener] is used to handle events, implement this class
   /// to receive the events.
   Future<void> startListener() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.startListener$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.startListener$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -355,7 +353,7 @@ class ZendeskApi {
   ///
   /// See [startListener].
   Future<void> stopListener() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.stopListener$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.stopListener$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -376,6 +374,28 @@ class ZendeskApi {
     }
   }
 
+  Future<void> setLightColorRgba(double r, double g, double b, double a) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setLightColorRgba$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[r, g, b, a]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
   /// Enables or disables logging for the Zendesk SDK.
   ///
   /// - [enabled]: If `true`, enables logging. If `false`, disables logging.
@@ -383,7 +403,7 @@ class ZendeskApi {
   /// See also:
   /// - [loggingEnabled]: Checks whether logging is currently enabled.
   Future<void> enableLogging([bool enabled = true]) async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.enableLogging$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.enableLogging$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -411,7 +431,7 @@ class ZendeskApi {
   /// See also:
   /// - [enableLogging]: Enables or disables logging for the Zendesk SDK.
   Future<bool> loggingEnabled() async {
-    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskApi.loggingEnabled$pigeonVar_messageChannelSuffix';
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.loggingEnabled$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,

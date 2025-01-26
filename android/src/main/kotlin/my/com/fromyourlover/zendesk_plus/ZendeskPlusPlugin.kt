@@ -2,6 +2,7 @@ package my.com.fromyourlover.zendesk_plus
 
 import android.app.Activity
 import android.content.Context
+import android.graphics.Color
 import io.flutter.Log
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -11,7 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import my.com.fromyourlover.pigeon.FlutterError
-import my.com.fromyourlover.pigeon.ZendeskApi
+import my.com.fromyourlover.pigeon.ZendeskHostApi
 import my.com.fromyourlover.pigeon.ZendeskListener
 import my.com.fromyourlover.pigeon.ZendeskUser
 import zendesk.android.Zendesk
@@ -19,17 +20,22 @@ import zendesk.android.ZendeskResult
 import zendesk.android.events.ZendeskEvent
 import zendesk.android.events.ZendeskEventListener
 import zendesk.android.events.exception.ZendeskJwtExpiredException
+import zendesk.android.messaging.model.UserColors
 import zendesk.messaging.android.DefaultMessagingFactory
 import zendesk.logger.Logger;
 
 /** ZendeskPlusPlugin */
-class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskApi {
+class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
     private var activity: Activity? = null // Store the activity
     private var context: Context? = null
     private var zendesk: Zendesk? = null
 
     private var flutterApi: ZendeskListener? = null
+
+    //    Customization
+    var lightColors: UserColors? = null
+    val darkColors: UserColors? = null
 
     private val zendeskEventListener: ZendeskEventListener = ZendeskEventListener { zendeskEvent ->
 
@@ -53,14 +59,14 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskApi {
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         Log.i("Zendesk", "Setup Method Chanel")
-        ZendeskApi.setUp(binding.binaryMessenger, this)
+        ZendeskHostApi.setUp(binding.binaryMessenger, this)
         flutterApi = ZendeskListener(binding.binaryMessenger)
 
         context = binding.applicationContext
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        ZendeskApi.setUp(binding.binaryMessenger, null)
+        ZendeskHostApi.setUp(binding.binaryMessenger, null)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -266,6 +272,15 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskApi {
     override fun stopListener() {
         checkInitialization()
         zendesk!!.removeEventListener(zendeskEventListener)
+    }
+
+    override fun setLightColorRgba(r: Double, g: Double, b: Double, a: Double) {
+        val x: Color = Color.valueOf(r.toFloat(), g.toFloat(), b.toFloat(), a.toFloat())
+
+        lightColors = UserColors(
+            onMessage = x.componentCount, onPrimary = x.componentCount, onAction = x.componentCount
+        )
+
     }
 
     override fun enableLogging(enabled: Boolean) = Logger.setLoggable(enabled)

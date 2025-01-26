@@ -16,7 +16,7 @@ import 'package:pigeon/pigeon.dart';
 /// ```
 ///
 @ConfigurePigeon(PigeonOptions(
-  dartOut: 'lib/pigeon/zendesk_api.g.dart',
+  dartOut: 'lib/src/pigeon/zendesk_api.g.dart',
   dartOptions: DartOptions(),
   kotlinOut:
       'android/src/main/kotlin/my/com/fromyourlover/pigeon/ZendeskApi.g.kt',
@@ -28,7 +28,7 @@ import 'package:pigeon/pigeon.dart';
   dartPackageName: 'zendesk_plus',
 ))
 @HostApi()
-abstract class ZendeskApi {
+abstract class ZendeskHostApi {
   /// Initializes the Zendesk SDK.
   ///
   /// Throws a [PlatformException] if initialization fails (e.g., invalid app ID).
@@ -106,9 +106,7 @@ abstract class ZendeskApi {
   /// final unreadCount = await zendesk.getUnreadMessageCount();
   /// print('Unread messages: $unreadCount');
   /// ```
-  ///
-  /// See also:
-  /// - [openChat]: Opens the chat interface.
+  /// Opens the chat interface.
   /// - [signIn]: Authenticates the user before retrieving messages.
   @async
   int getUnreadMessageCount();
@@ -123,6 +121,8 @@ abstract class ZendeskApi {
   ///
   /// See [startListener].
   void stopListener();
+
+  void setLightColorRgba(double r, double g, double b, double a);
 
   /// Enables or disables logging for the Zendesk SDK.
   ///

@@ -179,7 +179,7 @@ class ZendeskApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
 ///
 ///
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
-protocol ZendeskApi {
+protocol ZendeskHostApi {
   /// Initializes the Zendesk SDK.
   ///
   /// Throws a [PlatformException] if initialization fails (e.g., invalid app ID).
@@ -250,9 +250,7 @@ protocol ZendeskApi {
   /// final unreadCount = await zendesk.getUnreadMessageCount();
   /// print('Unread messages: $unreadCount');
   /// ```
-  ///
-  /// See also:
-  /// - [openChat]: Opens the chat interface.
+  /// Opens the chat interface.
   /// - [signIn]: Authenticates the user before retrieving messages.
   func getUnreadMessageCount(completion: @escaping (Result<Int64, Error>) -> Void)
   /// Starts listening for events from the Zendesk SDK.
@@ -264,6 +262,7 @@ protocol ZendeskApi {
   ///
   /// See [startListener].
   func stopListener() throws
+  func setLightColorRgba(r: Double, g: Double, b: Double, a: Double) throws
   /// Enables or disables logging for the Zendesk SDK.
   ///
   /// - [enabled]: If `true`, enables logging. If `false`, disables logging.
@@ -281,10 +280,10 @@ protocol ZendeskApi {
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
-class ZendeskApiSetup {
+class ZendeskHostApiSetup {
   static var codec: FlutterStandardMessageCodec { ZendeskApiPigeonCodec.shared }
-  /// Sets up an instance of `ZendeskApi` to handle messages through the `binaryMessenger`.
-  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: ZendeskApi?, messageChannelSuffix: String = "") {
+  /// Sets up an instance of `ZendeskHostApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: ZendeskHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
     /// Initializes the Zendesk SDK.
     ///
@@ -301,7 +300,7 @@ class ZendeskApiSetup {
     /// See also:
     /// - [signIn]: Authenticates a user with a JWT token.
     /// - [openChat]: Opens the Zendesk chat interface.
-    let initializeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.initialize\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let initializeChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialize\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       initializeChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
@@ -335,7 +334,7 @@ class ZendeskApiSetup {
     /// See also:
     /// - [initialize]: Prepares the SDK for use.
     /// - [signIn]: Authenticates a user before opening the chat.
-    let openChatChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.openChat\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let openChatChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.openChat\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       openChatChannel.setMessageHandler { _, reply in
         do {
@@ -366,7 +365,7 @@ class ZendeskApiSetup {
     /// See also:
     /// - [initialize]: Prepares the SDK for use.
     /// - [openChat]: Opens the chat interface after authentication.
-    let signInChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.signIn\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let signInChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signIn\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       signInChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
@@ -386,7 +385,7 @@ class ZendeskApiSetup {
     /// Signs out the current user.
     ///
     /// Throws a [PlatformException] if signing out fails (e.g., SDK not initialized).
-    let signOutChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.signOut\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let signOutChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signOut\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       signOutChannel.setMessageHandler { _, reply in
         api.signOut { result in
@@ -415,11 +414,9 @@ class ZendeskApiSetup {
     /// final unreadCount = await zendesk.getUnreadMessageCount();
     /// print('Unread messages: $unreadCount');
     /// ```
-    ///
-    /// See also:
-    /// - [openChat]: Opens the chat interface.
+    /// Opens the chat interface.
     /// - [signIn]: Authenticates the user before retrieving messages.
-    let getUnreadMessageCountChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.getUnreadMessageCount\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let getUnreadMessageCountChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.getUnreadMessageCount\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       getUnreadMessageCountChannel.setMessageHandler { _, reply in
         api.getUnreadMessageCount { result in
@@ -438,7 +435,7 @@ class ZendeskApiSetup {
     ///
     /// [ZendeskListener] is used to handle events, implement this class
     /// to receive the events.
-    let startListenerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.startListener\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let startListenerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.startListener\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       startListenerChannel.setMessageHandler { _, reply in
         do {
@@ -454,7 +451,7 @@ class ZendeskApiSetup {
     /// Stops listening for events from the Zendesk SDK.
     ///
     /// See [startListener].
-    let stopListenerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.stopListener\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let stopListenerChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.stopListener\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       stopListenerChannel.setMessageHandler { _, reply in
         do {
@@ -467,13 +464,31 @@ class ZendeskApiSetup {
     } else {
       stopListenerChannel.setMessageHandler(nil)
     }
+    let setLightColorRgbaChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setLightColorRgba\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setLightColorRgbaChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let rArg = args[0] as! Double
+        let gArg = args[1] as! Double
+        let bArg = args[2] as! Double
+        let aArg = args[3] as! Double
+        do {
+          try api.setLightColorRgba(r: rArg, g: gArg, b: bArg, a: aArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setLightColorRgbaChannel.setMessageHandler(nil)
+    }
     /// Enables or disables logging for the Zendesk SDK.
     ///
     /// - [enabled]: If `true`, enables logging. If `false`, disables logging.
     ///
     /// See also:
     /// - [loggingEnabled]: Checks whether logging is currently enabled.
-    let enableLoggingChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.enableLogging\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let enableLoggingChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.enableLogging\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       enableLoggingChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
@@ -494,7 +509,7 @@ class ZendeskApiSetup {
     ///
     /// See also:
     /// - [enableLogging]: Enables or disables logging for the Zendesk SDK.
-    let loggingEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskApi.loggingEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let loggingEnabledChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.loggingEnabled\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
       loggingEnabledChannel.setMessageHandler { _, reply in
         do {

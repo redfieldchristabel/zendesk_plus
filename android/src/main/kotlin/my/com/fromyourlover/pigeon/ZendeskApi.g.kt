@@ -156,7 +156,7 @@ private open class ZendeskApiPigeonCodec : StandardMessageCodec() {
  *
  * Generated interface from Pigeon that represents a handler of messages from Flutter.
  */
-interface ZendeskApi {
+interface ZendeskHostApi {
   /**
    * Initializes the Zendesk SDK.
    *
@@ -236,9 +236,7 @@ interface ZendeskApi {
    * final unreadCount = await zendesk.getUnreadMessageCount();
    * print('Unread messages: $unreadCount');
    * ```
-   *
-   * See also:
-   * - [openChat]: Opens the chat interface.
+   * Opens the chat interface.
    * - [signIn]: Authenticates the user before retrieving messages.
    */
   fun getUnreadMessageCount(callback: (Result<Long>) -> Unit)
@@ -255,6 +253,7 @@ interface ZendeskApi {
    * See [startListener].
    */
   fun stopListener()
+  fun setLightColorRgba(r: Double, g: Double, b: Double, a: Double)
   /**
    * Enables or disables logging for the Zendesk SDK.
    *
@@ -275,16 +274,16 @@ interface ZendeskApi {
   fun loggingEnabled(): Boolean
 
   companion object {
-    /** The codec used by ZendeskApi. */
+    /** The codec used by ZendeskHostApi. */
     val codec: MessageCodec<Any?> by lazy {
       ZendeskApiPigeonCodec()
     }
-    /** Sets up an instance of `ZendeskApi` to handle messages through the `binaryMessenger`. */
+    /** Sets up an instance of `ZendeskHostApi` to handle messages through the `binaryMessenger`. */
     @JvmOverloads
-    fun setUp(binaryMessenger: BinaryMessenger, api: ZendeskApi?, messageChannelSuffix: String = "") {
+    fun setUp(binaryMessenger: BinaryMessenger, api: ZendeskHostApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.initialize$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialize$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -304,7 +303,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.openChat$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.openChat$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
@@ -320,7 +319,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.signIn$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signIn$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -340,7 +339,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.signOut$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signOut$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             api.signOut{ result: Result<Unit> ->
@@ -357,7 +356,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.getUnreadMessageCount$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.getUnreadMessageCount$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             api.getUnreadMessageCount{ result: Result<Long> ->
@@ -375,7 +374,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.startListener$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.startListener$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
@@ -391,7 +390,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.stopListener$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.stopListener$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
@@ -407,7 +406,28 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.enableLogging$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setLightColorRgba$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val rArg = args[0] as Double
+            val gArg = args[1] as Double
+            val bArg = args[2] as Double
+            val aArg = args[3] as Double
+            val wrapped: List<Any?> = try {
+              api.setLightColorRgba(rArg, gArg, bArg, aArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.enableLogging$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
@@ -425,7 +445,7 @@ interface ZendeskApi {
         }
       }
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskApi.loggingEnabled$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.loggingEnabled$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { _, reply ->
             val wrapped: List<Any?> = try {
