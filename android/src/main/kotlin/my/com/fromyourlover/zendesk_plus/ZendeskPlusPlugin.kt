@@ -35,7 +35,7 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
     //    Customization
     var lightColors: UserColors? = null
-    val darkColors: UserColors? = null
+    var darkColors: UserColors? = null
 
     private val zendeskEventListener: ZendeskEventListener = ZendeskEventListener { zendeskEvent ->
 
@@ -121,7 +121,7 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
                 val result = Zendesk.initialize(
                     context = context!!,
                     channelKey = androidAppId,
-                    messagingFactory = DefaultMessagingFactory()
+                    messagingFactory = DefaultMessagingFactory(lightColors, darkColors)
                 )
 
                 when (result) {
@@ -274,13 +274,28 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
         zendesk!!.removeEventListener(zendeskEventListener)
     }
 
-    override fun setLightColorRgba(r: Double, g: Double, b: Double, a: Double) {
-        val x: Color = Color.valueOf(r.toFloat(), g.toFloat(), b.toFloat(), a.toFloat())
-
+    override fun setLightColorRgba(colors: my.com.fromyourlover.pigeon.UserColors) {
         lightColors = UserColors(
-            onMessage = x.componentCount, onPrimary = x.componentCount, onAction = x.componentCount
+            onPrimary = getAndroidColor(colors.onPrimary),
+            onAction = getAndroidColor(colors.onAction),
+            onMessage = getAndroidColor(colors.onMessage)
         )
+    }
 
+    override fun setDarkColorRgba(colors: my.com.fromyourlover.pigeon.UserColors) {
+        darkColors = UserColors(
+            onPrimary = getAndroidColor(colors.onPrimary),
+            onAction = getAndroidColor(colors.onAction),
+            onMessage = getAndroidColor(colors.onMessage)
+        )
+    }
+
+    private fun getAndroidColor(color: my.com.fromyourlover.pigeon.RgbaColor?): Int? {
+
+        if (color == null) return null
+        return Color.valueOf(
+            color.r.toFloat(), color.g.toFloat(), color.b.toFloat(), color.a.toFloat()
+        ).componentCount
     }
 
     override fun enableLogging(enabled: Boolean) = Logger.setLoggable(enabled)

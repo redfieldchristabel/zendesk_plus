@@ -76,6 +76,73 @@ class ZendeskUser {
   }
 }
 
+class RgbaColor {
+  RgbaColor({
+    required this.r,
+    required this.g,
+    required this.b,
+    required this.a,
+  });
+
+  double r;
+
+  double g;
+
+  double b;
+
+  double a;
+
+  Object encode() {
+    return <Object?>[
+      r,
+      g,
+      b,
+      a,
+    ];
+  }
+
+  static RgbaColor decode(Object result) {
+    result as List<Object?>;
+    return RgbaColor(
+      r: result[0]! as double,
+      g: result[1]! as double,
+      b: result[2]! as double,
+      a: result[3]! as double,
+    );
+  }
+}
+
+class UserColors {
+  UserColors({
+    this.onPrimary,
+    this.onMessage,
+    this.onAction,
+  });
+
+  RgbaColor? onPrimary;
+
+  RgbaColor? onMessage;
+
+  RgbaColor? onAction;
+
+  Object encode() {
+    return <Object?>[
+      onPrimary,
+      onMessage,
+      onAction,
+    ];
+  }
+
+  static UserColors decode(Object result) {
+    result as List<Object?>;
+    return UserColors(
+      onPrimary: result[0] as RgbaColor?,
+      onMessage: result[1] as RgbaColor?,
+      onAction: result[2] as RgbaColor?,
+    );
+  }
+}
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -90,6 +157,12 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is ZendeskUser) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
+    }    else if (value is RgbaColor) {
+      buffer.putUint8(131);
+      writeValue(buffer, value.encode());
+    }    else if (value is UserColors) {
+      buffer.putUint8(132);
+      writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
     }
@@ -103,6 +176,10 @@ class _PigeonCodec extends StandardMessageCodec {
         return value == null ? null : ZendeskEvent.values[value];
       case 130: 
         return ZendeskUser.decode(readValue(buffer)!);
+      case 131: 
+        return RgbaColor.decode(readValue(buffer)!);
+      case 132: 
+        return UserColors.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -374,7 +451,7 @@ class ZendeskHostApi {
     }
   }
 
-  Future<void> setLightColorRgba(double r, double g, double b, double a) async {
+  Future<void> setLightColorRgba(UserColors colors) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setLightColorRgba$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -382,7 +459,29 @@ class ZendeskHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[r, g, b, a]) as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[colors]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else {
+      return;
+    }
+  }
+
+  Future<void> setDarkColorRgba(UserColors colors) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setDarkColorRgba$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[colors]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {

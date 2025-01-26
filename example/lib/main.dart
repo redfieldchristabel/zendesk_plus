@@ -29,6 +29,7 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     ZendeskListener.setUp(this);
+
     await zendesk.initialize(androidAppId: "From Zendesk Admin");
 
     await zendesk.signIn(getJwt());

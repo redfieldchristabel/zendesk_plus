@@ -107,6 +107,57 @@ data class ZendeskUser (
     )
   }
 }
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class RgbaColor (
+  val r: Double,
+  val g: Double,
+  val b: Double,
+  val a: Double
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): RgbaColor {
+      val r = pigeonVar_list[0] as Double
+      val g = pigeonVar_list[1] as Double
+      val b = pigeonVar_list[2] as Double
+      val a = pigeonVar_list[3] as Double
+      return RgbaColor(r, g, b, a)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      r,
+      g,
+      b,
+      a,
+    )
+  }
+}
+
+/** Generated class from Pigeon that represents data sent in messages. */
+data class UserColors (
+  val onPrimary: RgbaColor? = null,
+  val onMessage: RgbaColor? = null,
+  val onAction: RgbaColor? = null
+)
+ {
+  companion object {
+    fun fromList(pigeonVar_list: List<Any?>): UserColors {
+      val onPrimary = pigeonVar_list[0] as RgbaColor?
+      val onMessage = pigeonVar_list[1] as RgbaColor?
+      val onAction = pigeonVar_list[2] as RgbaColor?
+      return UserColors(onPrimary, onMessage, onAction)
+    }
+  }
+  fun toList(): List<Any?> {
+    return listOf(
+      onPrimary,
+      onMessage,
+      onAction,
+    )
+  }
+}
 private open class ZendeskApiPigeonCodec : StandardMessageCodec() {
   override fun readValueOfType(type: Byte, buffer: ByteBuffer): Any? {
     return when (type) {
@@ -120,6 +171,16 @@ private open class ZendeskApiPigeonCodec : StandardMessageCodec() {
           ZendeskUser.fromList(it)
         }
       }
+      131.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          RgbaColor.fromList(it)
+        }
+      }
+      132.toByte() -> {
+        return (readValue(buffer) as? List<Any?>)?.let {
+          UserColors.fromList(it)
+        }
+      }
       else -> super.readValueOfType(type, buffer)
     }
   }
@@ -131,6 +192,14 @@ private open class ZendeskApiPigeonCodec : StandardMessageCodec() {
       }
       is ZendeskUser -> {
         stream.write(130)
+        writeValue(stream, value.toList())
+      }
+      is RgbaColor -> {
+        stream.write(131)
+        writeValue(stream, value.toList())
+      }
+      is UserColors -> {
+        stream.write(132)
         writeValue(stream, value.toList())
       }
       else -> super.writeValue(stream, value)
@@ -253,7 +322,8 @@ interface ZendeskHostApi {
    * See [startListener].
    */
   fun stopListener()
-  fun setLightColorRgba(r: Double, g: Double, b: Double, a: Double)
+  fun setLightColorRgba(colors: UserColors)
+  fun setDarkColorRgba(colors: UserColors)
   /**
    * Enables or disables logging for the Zendesk SDK.
    *
@@ -410,12 +480,27 @@ interface ZendeskHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val rArg = args[0] as Double
-            val gArg = args[1] as Double
-            val bArg = args[2] as Double
-            val aArg = args[3] as Double
+            val colorsArg = args[0] as UserColors
             val wrapped: List<Any?> = try {
-              api.setLightColorRgba(rArg, gArg, bArg, aArg)
+              api.setLightColorRgba(colorsArg)
+              listOf(null)
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setDarkColorRgba$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { message, reply ->
+            val args = message as List<Any?>
+            val colorsArg = args[0] as UserColors
+            val wrapped: List<Any?> = try {
+              api.setDarkColorRgba(colorsArg)
               listOf(null)
             } catch (exception: Throwable) {
               wrapError(exception)
