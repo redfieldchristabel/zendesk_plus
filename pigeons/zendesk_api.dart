@@ -45,7 +45,7 @@ abstract class ZendeskHostApi {
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
   @async
-  void initialize({String? androidAppId, String? iosAppId});
+  void initialize({String? androidClientId, String? iosClientId});
 
   /// Opens the Zendesk chat interface.
   ///
@@ -122,7 +122,9 @@ abstract class ZendeskHostApi {
   /// See [startListener].
   void stopListener();
 
-  void setLightColorRgba(double r, double g, double b, double a);
+  void setLightColorRgba(UserColors colors);
+
+  void setDarkColorRgba(UserColors colors);
 
   /// Enables or disables logging for the Zendesk SDK.
   ///
@@ -186,4 +188,21 @@ class ZendeskUser {
   /// final user = ZendeskUser(id: '12345', externalId: '67890');
   /// ```
   ZendeskUser({required this.id, required this.externalId});
+}
+
+class RgbaColor {
+  final double r;
+  final double g;
+  final double b;
+  final double a;
+
+  RgbaColor(this.r, this.g, this.b, this.a);
+}
+
+class UserColors {
+  final RgbaColor? onPrimary;
+  final RgbaColor? onMessage;
+  final RgbaColor? onAction;
+
+  UserColors({this.onPrimary, this.onMessage, this.onAction});
 }

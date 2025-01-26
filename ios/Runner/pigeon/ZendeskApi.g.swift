@@ -118,6 +118,66 @@ struct ZendeskUser {
   }
 }
 
+/// Generated class from Pigeon that represents data sent in messages.
+struct RgbaColor {
+  var r: Double
+  var g: Double
+  var b: Double
+  var a: Double
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> RgbaColor? {
+    let r = pigeonVar_list[0] as! Double
+    let g = pigeonVar_list[1] as! Double
+    let b = pigeonVar_list[2] as! Double
+    let a = pigeonVar_list[3] as! Double
+
+    return RgbaColor(
+      r: r,
+      g: g,
+      b: b,
+      a: a
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      r,
+      g,
+      b,
+      a,
+    ]
+  }
+}
+
+/// Generated class from Pigeon that represents data sent in messages.
+struct UserColors {
+  var onPrimary: RgbaColor? = nil
+  var onMessage: RgbaColor? = nil
+  var onAction: RgbaColor? = nil
+
+
+  // swift-format-ignore: AlwaysUseLowerCamelCase
+  static func fromList(_ pigeonVar_list: [Any?]) -> UserColors? {
+    let onPrimary: RgbaColor? = nilOrValue(pigeonVar_list[0])
+    let onMessage: RgbaColor? = nilOrValue(pigeonVar_list[1])
+    let onAction: RgbaColor? = nilOrValue(pigeonVar_list[2])
+
+    return UserColors(
+      onPrimary: onPrimary,
+      onMessage: onMessage,
+      onAction: onAction
+    )
+  }
+  func toList() -> [Any?] {
+    return [
+      onPrimary,
+      onMessage,
+      onAction,
+    ]
+  }
+}
+
 private class ZendeskApiPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
@@ -129,6 +189,10 @@ private class ZendeskApiPigeonCodecReader: FlutterStandardReader {
       return nil
     case 130:
       return ZendeskUser.fromList(self.readValue() as! [Any?])
+    case 131:
+      return RgbaColor.fromList(self.readValue() as! [Any?])
+    case 132:
+      return UserColors.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -142,6 +206,12 @@ private class ZendeskApiPigeonCodecWriter: FlutterStandardWriter {
       super.writeValue(value.rawValue)
     } else if let value = value as? ZendeskUser {
       super.writeByte(130)
+      super.writeValue(value.toList())
+    } else if let value = value as? RgbaColor {
+      super.writeByte(131)
+      super.writeValue(value.toList())
+    } else if let value = value as? UserColors {
+      super.writeByte(132)
       super.writeValue(value.toList())
     } else {
       super.writeValue(value)
@@ -195,7 +265,7 @@ protocol ZendeskHostApi {
   /// See also:
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
-  func initialize(androidAppId: String?, iosAppId: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  func initialize(androidClientId: String?, iosClientId: String?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Opens the Zendesk chat interface.
   ///
   /// Throws a [PlatformException] if the chat interface cannot be opened
@@ -262,7 +332,8 @@ protocol ZendeskHostApi {
   ///
   /// See [startListener].
   func stopListener() throws
-  func setLightColorRgba(r: Double, g: Double, b: Double, a: Double) throws
+  func setLightColorRgba(colors: UserColors) throws
+  func setDarkColorRgba(colors: UserColors) throws
   /// Enables or disables logging for the Zendesk SDK.
   ///
   /// - [enabled]: If `true`, enables logging. If `false`, disables logging.
@@ -304,9 +375,9 @@ class ZendeskHostApiSetup {
     if let api = api {
       initializeChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let androidAppIdArg: String? = nilOrValue(args[0])
-        let iosAppIdArg: String? = nilOrValue(args[1])
-        api.initialize(androidAppId: androidAppIdArg, iosAppId: iosAppIdArg) { result in
+        let androidClientIdArg: String? = nilOrValue(args[0])
+        let iosClientIdArg: String? = nilOrValue(args[1])
+        api.initialize(androidClientId: androidClientIdArg, iosClientId: iosClientIdArg) { result in
           switch result {
           case .success:
             reply(wrapResult(nil))
@@ -468,12 +539,9 @@ class ZendeskHostApiSetup {
     if let api = api {
       setLightColorRgbaChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let rArg = args[0] as! Double
-        let gArg = args[1] as! Double
-        let bArg = args[2] as! Double
-        let aArg = args[3] as! Double
+        let colorsArg = args[0] as! UserColors
         do {
-          try api.setLightColorRgba(r: rArg, g: gArg, b: bArg, a: aArg)
+          try api.setLightColorRgba(colors: colorsArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
@@ -481,6 +549,21 @@ class ZendeskHostApiSetup {
       }
     } else {
       setLightColorRgbaChannel.setMessageHandler(nil)
+    }
+    let setDarkColorRgbaChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.setDarkColorRgba\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      setDarkColorRgbaChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let colorsArg = args[0] as! UserColors
+        do {
+          try api.setDarkColorRgba(colors: colorsArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      setDarkColorRgbaChannel.setMessageHandler(nil)
     }
     /// Enables or disables logging for the Zendesk SDK.
     ///
