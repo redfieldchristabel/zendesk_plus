@@ -18,6 +18,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> implements ZendeskListener {
   bool initialized = false;
   int unreadMessage = 0;
+  final zendesk = ZendeskApi();
 
   @override
   void initState() {
@@ -28,12 +29,12 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     ZendeskListener.setUp(this);
-    await ZendeskHostApi().initialize(androidAppId: "From Zendesk Admin");
+    await zendesk.initialize(androidAppId: "From Zendesk Admin");
 
-    final a = await ZendeskHostApi().signIn(getJwt());
+    await zendesk.signIn(getJwt());
 
-    final x = await ZendeskHostApi().getUnreadMessageCount();
-    print("aaa ${a.externalId}");
+    await zendesk.startListener();
+
     setState(() {
       initialized = true;
     });
@@ -45,7 +46,7 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
       home: Scaffold(
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            ZendeskHostApi().openChat();
+            zendesk.openChat();
           },
         ),
         appBar: AppBar(
@@ -61,8 +62,13 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
 
   @override
   void dispose() {
-    ZendeskListener.setUp(null);
+    _disposeZendesk();
     super.dispose();
+  }
+
+  Future<void> _disposeZendesk() async {
+    await zendesk.stopListener();
+    ZendeskListener.setUp(null);
   }
 
   @override
@@ -70,10 +76,12 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
     print("flutter ebvent trigger $event");
 
     if (event == ZendeskEvent.unreadMessageCountChanged) {
-      final x = await ZendeskHostApi().getUnreadMessageCount();
+      final x = await zendesk.getUnreadMessageCount();
       setState(() {
         unreadMessage = x;
       });
+    } else if (event == ZendeskEvent.jwtExpiredException) {
+      await zendesk.signIn(getJwt());
     }
   }
 }

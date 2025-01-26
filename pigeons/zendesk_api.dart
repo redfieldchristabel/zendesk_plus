@@ -28,7 +28,7 @@ import 'package:pigeon/pigeon.dart';
   dartPackageName: 'zendesk_plus',
 ))
 @HostApi()
-abstract class ZendeskHostApi {
+abstract class ZendeskApi {
   /// Initializes the Zendesk SDK.
   ///
   /// Throws a [PlatformException] if initialization fails (e.g., invalid app ID).
@@ -86,6 +86,12 @@ abstract class ZendeskHostApi {
   @async
   ZendeskUser signIn(String jwt);
 
+  /// Signs out the current user.
+  ///
+  /// Throws a [PlatformException] if signing out fails (e.g., SDK not initialized).
+  @async
+  void signOut();
+
   /// Retrieves the number of unread messages in the user's chat history.
   ///
   /// Returns an number representing the count of unread messages.
@@ -106,6 +112,17 @@ abstract class ZendeskHostApi {
   /// - [signIn]: Authenticates the user before retrieving messages.
   @async
   int getUnreadMessageCount();
+
+  /// Starts listening for events from the Zendesk SDK.
+  ///
+  /// [ZendeskListener] is used to handle events, implement this class
+  /// to receive the events.
+  void startListener();
+
+  /// Stops listening for events from the Zendesk SDK.
+  ///
+  /// See [startListener].
+  void stopListener();
 
   /// Enables or disables logging for the Zendesk SDK.
   ///
@@ -130,6 +147,7 @@ abstract class ZendeskListener {
 }
 
 enum ZendeskEvent {
+  jwtExpiredException,
   authenticationFailed,
   connectionStatusChanged,
   conversationAdded,

@@ -11,20 +11,19 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import my.com.fromyourlover.pigeon.FlutterError
-import my.com.fromyourlover.pigeon.ZendeskHostApi
+import my.com.fromyourlover.pigeon.ZendeskApi
 import my.com.fromyourlover.pigeon.ZendeskListener
 import my.com.fromyourlover.pigeon.ZendeskUser
 import zendesk.android.Zendesk
 import zendesk.android.ZendeskResult
-import zendesk.android.eventFlow
 import zendesk.android.events.ZendeskEvent
 import zendesk.android.events.ZendeskEventListener
+import zendesk.android.events.exception.ZendeskJwtExpiredException
 import zendesk.messaging.android.DefaultMessagingFactory
 import zendesk.logger.Logger;
-import kotlin.math.log
 
 /** ZendeskPlusPlugin */
-class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
+class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskApi {
 
     private var activity: Activity? = null // Store the activity
     private var context: Context? = null
@@ -36,7 +35,14 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
 
         when (zendeskEvent) {
-            is ZendeskEvent.AuthenticationFailed -> flutterApi?.onEvent(my.com.fromyourlover.pigeon.ZendeskEvent.AUTHENTICATION_FAILED) { }
+            is ZendeskEvent.AuthenticationFailed -> {
+                flutterApi?.onEvent(my.com.fromyourlover.pigeon.ZendeskEvent.AUTHENTICATION_FAILED) { }
+
+                when (zendeskEvent.error) {
+                    is ZendeskJwtExpiredException -> flutterApi?.onEvent(my.com.fromyourlover.pigeon.ZendeskEvent.JWT_EXPIRED_EXCEPTION) {}
+                }
+            }
+
             is ZendeskEvent.ConnectionStatusChanged -> flutterApi?.onEvent(my.com.fromyourlover.pigeon.ZendeskEvent.CONNECTION_STATUS_CHANGED) { }
             is ZendeskEvent.ConversationAdded -> flutterApi?.onEvent(my.com.fromyourlover.pigeon.ZendeskEvent.CONNECTION_STATUS_CHANGED) { }
             is ZendeskEvent.FieldValidationFailed -> flutterApi?.onEvent(my.com.fromyourlover.pigeon.ZendeskEvent.FIELD_VALIDATION_FAILED) { }
@@ -47,18 +53,14 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         Log.i("Zendesk", "Setup Method Chanel")
-        ZendeskHostApi.setUp(binding.binaryMessenger, this)
+        ZendeskApi.setUp(binding.binaryMessenger, this)
         flutterApi = ZendeskListener(binding.binaryMessenger)
-
-        Log.i("Zendesk", "Attach Zendesk Listener")
-//        zendesk!!.eventFlow.collect { event -> }
-//        zendesk?.addEventListener(zendeskEventListener)
 
         context = binding.applicationContext
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        ZendeskHostApi.setUp(binding.binaryMessenger, null)
+        ZendeskApi.setUp(binding.binaryMessenger, null)
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
@@ -120,8 +122,6 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
                     is ZendeskResult.Success -> {
                         Log.i("Zendesk", "Initialization successful")
                         zendesk = result.value
-
-                        zendesk!!.addEventListener(zendeskEventListener)
 
                         callback(Result.success(Unit))
                     }
@@ -207,6 +207,33 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
         }
     }
 
+    override fun signOut(callback: (Result<Unit>) -> Unit) {
+        checkInitialization()
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                when (val result = zendesk!!.logoutUser()) {
+                    is ZendeskResult.Success -> {
+                        callback(
+                            Result.success(Unit)
+                        )
+                    }
+
+                    is ZendeskResult.Failure -> {
+                        callback(Result.failure(result.error))
+                    }
+                }
+            } catch (e: Exception) {
+                callback(
+                    Result.failure(
+                        FlutterError(
+                            "channel-error", "Sign-out failed", e.message
+                        )
+                    )
+                )
+            }
+        }
+    }
+
     private fun checkInitialization() {
         if (zendesk == null) {
             throw FlutterError("channel-error", "Zendesk is not initialized", "")
@@ -229,6 +256,16 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
                 )
             }
         }
+    }
+
+    override fun startListener() {
+        checkInitialization()
+        zendesk!!.addEventListener(zendeskEventListener)
+    }
+
+    override fun stopListener() {
+        checkInitialization()
+        zendesk!!.removeEventListener(zendeskEventListener)
     }
 
     override fun enableLogging(enabled: Boolean) = Logger.setLoggable(enabled)
