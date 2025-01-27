@@ -265,7 +265,7 @@ protocol ZendeskHostApi {
   /// See also:
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
-  func initialize(androidClientId: String?, iosClientId: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  func initialize(androidChannelId: String?, iosChannelId: String?, completion: @escaping (Result<Void, Error>) -> Void)
   /// Opens the Zendesk chat interface.
   ///
   /// Throws a [PlatformException] if the chat interface cannot be opened
@@ -375,9 +375,9 @@ class ZendeskHostApiSetup {
     if let api = api {
       initializeChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let androidClientIdArg: String? = nilOrValue(args[0])
-        let iosClientIdArg: String? = nilOrValue(args[1])
-        api.initialize(androidClientId: androidClientIdArg, iosClientId: iosClientIdArg) { result in
+        let androidChannelIdArg: String? = nilOrValue(args[0])
+        let iosChannelIdArg: String? = nilOrValue(args[1])
+        api.initialize(androidChannelId: androidChannelIdArg, iosChannelId: iosChannelIdArg) { result in
           switch result {
           case .success:
             reply(wrapResult(nil))

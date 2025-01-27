@@ -227,7 +227,7 @@ class ZendeskHostApi {
   /// See also:
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
-  Future<void> initialize({String? androidClientId, String? iosClientId}) async {
+  Future<void> initialize({String? androidChannelId, String? iosChannelId}) async {
     final String pigeonVar_channelName = 'dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialize$pigeonVar_messageChannelSuffix';
     final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
@@ -235,7 +235,7 @@ class ZendeskHostApi {
       binaryMessenger: pigeonVar_binaryMessenger,
     );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[androidClientId, iosClientId]) as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[androidChannelId, iosChannelId]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {

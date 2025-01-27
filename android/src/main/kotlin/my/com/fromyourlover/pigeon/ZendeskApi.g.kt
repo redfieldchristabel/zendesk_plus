@@ -243,7 +243,7 @@ interface ZendeskHostApi {
    * - [signIn]: Authenticates a user with a JWT token.
    * - [openChat]: Opens the Zendesk chat interface.
    */
-  fun initialize(androidClientId: String?, iosClientId: String?, callback: (Result<Unit>) -> Unit)
+  fun initialize(androidChannelId: String?, iosChannelId: String?, callback: (Result<Unit>) -> Unit)
   /**
    * Opens the Zendesk chat interface.
    *
@@ -357,9 +357,9 @@ interface ZendeskHostApi {
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val androidClientIdArg = args[0] as String?
-            val iosClientIdArg = args[1] as String?
-            api.initialize(androidClientIdArg, iosClientIdArg) { result: Result<Unit> ->
+            val androidChannelIdArg = args[0] as String?
+            val iosChannelIdArg = args[1] as String?
+            api.initialize(androidChannelIdArg, iosChannelIdArg) { result: Result<Unit> ->
               val error = result.exceptionOrNull()
               if (error != null) {
                 reply.reply(wrapError(error))

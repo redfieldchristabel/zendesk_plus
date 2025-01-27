@@ -86,9 +86,9 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
     }
 
     override fun initialize(
-        androidAppId: String?, iosAppId: String?, callback: (Result<Unit>) -> Unit
+        androidClientId: String?, iosAppId: String?, callback: (Result<Unit>) -> Unit
     ) {
-        if (androidAppId == null) {
+        if (androidClientId == null) {
             callback(
                 Result.failure(
                     FlutterError(
@@ -120,7 +120,7 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
                 val result = Zendesk.initialize(
                     context = context!!,
-                    channelKey = androidAppId,
+                    channelKey = androidClientId,
                     messagingFactory = DefaultMessagingFactory(lightColors, darkColors)
                 )
 

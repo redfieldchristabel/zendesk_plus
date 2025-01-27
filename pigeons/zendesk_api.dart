@@ -45,7 +45,7 @@ abstract class ZendeskHostApi {
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
   @async
-  void initialize({String? androidClientId, String? iosClientId});
+  void initialize({String? androidChannelId, String? iosChannelId});
 
   /// Opens the Zendesk chat interface.
   ///
