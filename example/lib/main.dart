@@ -30,7 +30,7 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
   Future<void> initPlatformState() async {
     ZendeskListener.setUp(this);
 
-    await zendesk.initialize(androidClientId: "From Zendesk Admin");
+    await zendesk.initialize(androidChannelId: "From Zendesk Admin");
 
     await zendesk.signIn(getJwt());
 
