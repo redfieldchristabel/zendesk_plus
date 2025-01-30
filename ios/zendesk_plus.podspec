@@ -14,6 +14,7 @@ A new Flutter project.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
+  s.source_files = 'Runner/pigeon/*.swift'
   s.dependency 'Flutter'
   s.dependency 'ZendeskSDKMessaging', '2.24.0'
   # s.dependency 'ZendeskSDKMessaging', ' 2.27.0'
