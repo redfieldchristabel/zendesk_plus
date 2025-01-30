@@ -165,34 +165,24 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
         zendesk?.addEventObserver(self) { event in
             switch event {
                 case .unreadMessageCountChanged(let currentUnreadCount):
-                ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.unreadMessageCountChanged, completion: {_ in })
-//                ZendeskEvent.unreadMessageCountChanged
-                        // Use the currentUnreadCount directly
-                        print("Unread message count changed: \(currentUnreadCount)")
-                        
-                        // If you need to perform additional actions, do so here
-                        self.getUnreadMessageCount { result in
-                            print("Fetched unread message count: \(result)")
-                            // You can compare result with currentUnreadCount if needed
-                        }
+                    ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.unreadMessageCountChanged, completion: {_ in })
+
                     
                 case .authenticationFailed(let error as NSError):
-                    print("Authentication error received: \(error)")
-                    print("Domain: \(error.domain)")
-                    print("Error code: \(error.code)")
-                    print("Localized Description: \(error.localizedDescription)")
+                    ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.authenticationFailed, completion: {_ in })
+                
+                    if error.code == 401 {
+                        ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.jwtExpiredException, completion: {_ in })
+                    }
                     
                 case .conversationAdded(conversationId: let conversationId):
-                    print("Conversation with the conversation id \(conversationId) was successfully created")
+                    ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.conversationAdded , completion: {_ in })
                     
                 case .connectionStatusChanged(connectionStatus: let connectionStatus):
-                    print("connectionStatusChanged event emitted: \(connectionStatus.stringValue)")
+                    ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.connectionStatusChanged , completion: {_ in })
                     
                 case .sendMessageFailed(let error as NSError):
-                    print("Authentication error received: \(error)")
-                    print("Domain: \(error.domain)")
-                    print("Error code: \(error.code)")
-                    print("Localized Description: \(error.localizedDescription)")
+                    ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.sendMessageFailed , completion: {_ in })
                     
                 @unknown default:
                     break
