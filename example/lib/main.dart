@@ -37,12 +37,12 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
     ));
 
     await zendesk.setDarkColor(UserColors(
-      onAction: Colors.red,
-      onMessage: Colors.red,
-      onPrimary: Colors.red,
+      onAction: Colors.green,
+      onMessage: Colors.green,
+      onPrimary: Colors.green,
     ));
 
-    await zendesk.initialize(androidChannelId: "From Zendesk Admin");
+    await zendesk.initialize(androidChannelId: "android chanle id");
 
     await zendesk.signIn(getJwt());
 
@@ -101,8 +101,8 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
 
 String getJwt() {
   // Your secret key
-  final secret = 'Get from zendesk Admin';
-  final keyId = 'Get from zendesk Admin';
+  final secret = 'get from zendesk admin';
+  final keyId = 'get from zendesk admin';
 
   // Create the JWT
   final jwt = JWT(
