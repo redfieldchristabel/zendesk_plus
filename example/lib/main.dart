@@ -30,6 +30,18 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
   Future<void> initPlatformState() async {
     ZendeskListener.setUp(this);
 
+    await zendesk.setLightColor(UserColors(
+      onAction: Colors.red,
+      onMessage: Colors.red,
+      onPrimary: Colors.red,
+    ));
+
+    await zendesk.setDarkColor(UserColors(
+      onAction: Colors.red,
+      onMessage: Colors.red,
+      onPrimary: Colors.red,
+    ));
+
     await zendesk.initialize(androidChannelId: "From Zendesk Admin");
 
     await zendesk.signIn(getJwt());
