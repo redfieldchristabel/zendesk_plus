@@ -9,11 +9,20 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
     
     // MARK: - FlutterPlugin
     private var zendesk: Zendesk?
+    var isloggedIn: Bool = false
     var factory = DefaultMessagingFactory()
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = ZendeskPlusPlugin()
         ZendeskHostApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
+    }
+    
+    func initialized() throws -> Bool {
+        return zendesk != nil
+    }
+    
+    func signedIn() throws -> Bool {
+        return isloggedIn
     }
 
     func initialize(androidChannelId: String?, iosChannelId: String?, completion: @escaping (Result<Void, Error>) -> Void) {
@@ -107,6 +116,7 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
                 switch result {
                 case .success(let user):
                     let zendeskUser = ZendeskUser(id: user.id, externalId: user.externalId)
+                    self.isloggedIn = true
                     completion(.success(zendeskUser))
                 case .failure(let error):
                     print("Sign-in failed: \(error.localizedDescription)")
