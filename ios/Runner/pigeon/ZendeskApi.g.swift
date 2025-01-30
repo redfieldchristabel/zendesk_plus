@@ -306,6 +306,8 @@ protocol ZendeskHostApi {
   ///
   /// Throws a [PlatformException] if signing out fails (e.g., SDK not initialized).
   func signOut(completion: @escaping (Result<Void, Error>) -> Void)
+  /// Checks whether a user is currently signed in.
+  func signedIn() throws -> Bool
   /// Retrieves the number of unread messages in the user's chat history.
   ///
   /// Returns an number representing the count of unread messages.
@@ -470,6 +472,20 @@ class ZendeskHostApiSetup {
       }
     } else {
       signOutChannel.setMessageHandler(nil)
+    }
+    /// Checks whether a user is currently signed in.
+    let signedInChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signedIn\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      signedInChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.signedIn()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      signedInChannel.setMessageHandler(nil)
     }
     /// Retrieves the number of unread messages in the user's chat history.
     ///

@@ -92,6 +92,9 @@ abstract class ZendeskHostApi {
   @async
   void signOut();
 
+  /// Checks whether a user is currently signed in.
+  bool signedIn();
+
   /// Retrieves the number of unread messages in the user's chat history.
   ///
   /// Returns an number representing the count of unread messages.

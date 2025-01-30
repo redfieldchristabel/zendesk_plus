@@ -290,6 +290,8 @@ interface ZendeskHostApi {
    * Throws a [PlatformException] if signing out fails (e.g., SDK not initialized).
    */
   fun signOut(callback: (Result<Unit>) -> Unit)
+  /** Checks whether a user is currently signed in. */
+  fun signedIn(): Boolean
   /**
    * Retrieves the number of unread messages in the user's chat history.
    *
@@ -420,6 +422,21 @@ interface ZendeskHostApi {
                 reply.reply(wrapResult(null))
               }
             }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.signedIn$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.signedIn())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

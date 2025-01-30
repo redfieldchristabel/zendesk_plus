@@ -30,12 +30,13 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
     private var activity: Activity? = null // Store the activity
     private var context: Context? = null
     private var zendesk: Zendesk? = null
+    private var loggedIn: Boolean = false
 
     private var flutterApi: ZendeskListener? = null
 
     //    Customization
-    var lightColors: UserColors? = null
-    var darkColors: UserColors? = null
+    private var lightColors: UserColors? = null
+    private var darkColors: UserColors? = null
 
     private val zendeskEventListener: ZendeskEventListener = ZendeskEventListener { zendeskEvent ->
 
@@ -192,6 +193,7 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
                     is ZendeskResult.Success -> {
                         // Extract data from ZendeskUser (replace with actual logic)
                         val userData = result.value
+                        loggedIn = true
                         callback(
                             Result.success(
                                 ZendeskUser(
@@ -202,6 +204,7 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
                     }
 
                     is ZendeskResult.Failure -> {
+                        loggedIn = false
                         callback(Result.failure(result.error))
                     }
                 }
@@ -238,6 +241,10 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
                 )
             }
         }
+    }
+
+    override fun signedIn(): Boolean {
+        return loggedIn
     }
 
     private fun checkInitialization() {
