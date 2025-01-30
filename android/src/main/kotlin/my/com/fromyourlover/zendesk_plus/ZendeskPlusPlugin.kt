@@ -3,6 +3,7 @@ package my.com.fromyourlover.zendesk_plus
 import android.app.Activity
 import android.content.Context
 import android.graphics.Color
+import androidx.annotation.ColorInt
 import io.flutter.Log
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -117,12 +118,17 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                Log.i("Zendesk", "Starting Zendesk initialization...")
+                Log.i(
+                    "Zendesk",
+                    "Starting Zendesk initialization...  ${darkColors?.onAction} ${Color.RED}"
+                )
 
                 val result = Zendesk.initialize(
                     context = context!!,
                     channelKey = androidChannelId,
-                    messagingFactory = DefaultMessagingFactory(lightColors, darkColors)
+                    messagingFactory = DefaultMessagingFactory(
+                        lightColors, darkColors
+                    )
                 )
 
                 when (result) {
@@ -306,7 +312,7 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
         if (color == null) return null
         return Color.valueOf(
             color.r.toFloat(), color.g.toFloat(), color.b.toFloat(), color.a.toFloat()
-        ).componentCount
+        ).toArgb()
     }
 
     override fun enableLogging(enabled: Boolean) = Logger.setLoggable(enabled)
