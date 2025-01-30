@@ -11,10 +11,12 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
     private var zendesk: Zendesk?
     var isloggedIn: Bool = false
     var factory = DefaultMessagingFactory()
+    private static var zendeskListener: ZendeskListener?
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let instance = ZendeskPlusPlugin()
         ZendeskHostApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
+        zendeskListener = ZendeskListener(binaryMessenger: registrar.messenger())
     }
     
     func initialized() throws -> Bool {
@@ -151,6 +153,7 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
         }
     }
     
+    
     func getUnreadMessageCount(completion: @escaping (Result<Int64, Error>) -> Void) {
         // Retrieve unread message count
         let count = zendesk?.messaging?.getUnreadMessageCount() ?? 0
@@ -161,9 +164,17 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
         
         zendesk?.addEventObserver(self) { event in
             switch event {
-                case let .unreadMessageCountChanged(currentUnreadCount):
-                    self.getUnreadMessageCount(){result in print(result)}
-                    print("Unread message count changed: \(currentUnreadCount)")
+                case .unreadMessageCountChanged(let currentUnreadCount):
+                ZendeskPlusPlugin.zendeskListener?.onEvent(event: ZendeskEvent.unreadMessageCountChanged, completion: {_ in })
+//                ZendeskEvent.unreadMessageCountChanged
+                        // Use the currentUnreadCount directly
+                        print("Unread message count changed: \(currentUnreadCount)")
+                        
+                        // If you need to perform additional actions, do so here
+                        self.getUnreadMessageCount { result in
+                            print("Fetched unread message count: \(result)")
+                            // You can compare result with currentUnreadCount if needed
+                        }
                     
                 case .authenticationFailed(let error as NSError):
                     print("Authentication error received: \(error)")
