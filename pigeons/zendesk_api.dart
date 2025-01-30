@@ -23,7 +23,7 @@ import 'package:pigeon/pigeon.dart';
   kotlinOptions: KotlinOptions(
     package: 'my.com.fromyourlover.pigeon',
   ),
-  swiftOut: 'ios/Runner/pigeon/ZendeskApi.g.swift',
+  swiftOut: 'ios/Classes/pigeon/ZendeskApi.g.swift',
   swiftOptions: SwiftOptions(),
   dartPackageName: 'zendesk_plus',
 ))
