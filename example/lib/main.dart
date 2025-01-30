@@ -30,11 +30,19 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
   Future<void> initPlatformState() async {
     ZendeskListener.setUp(this);
 
-    await zendesk.initialize(androidChannelId: "From Zendesk Admin");
+    await zendesk.initialize(
+        iosChannelId:
+            "eyJzZXR0aW5nc191cmwiOiJodHRwczovL2NhcmFjb21teS56ZW5kZXNrLmNvbS9tb2JpbGVfc2RrX2FwaS9zZXR0aW5ncy8wMUpINEozV0U3N0hFNVlTMFlCMTRBWVlGSy5qc29uIn0=");
 
     await zendesk.signIn(getJwt());
 
     await zendesk.startListener();
+
+    await zendesk.setLightColor(UserColors(
+      onPrimary: Colors.amber,
+      onAction: Colors.amber,
+      onMessage: Colors.amber,
+    ));
 
     setState(() {
       initialized = true;
@@ -89,8 +97,9 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
 
 String getJwt() {
   // Your secret key
-  final secret = 'Get from zendesk Admin';
-  final keyId = 'Get from zendesk Admin';
+  final secret =
+      '69NGJS1xCLxTrwqKbSMfAqyHpUxmXOyXhH1j6oTWnN39IRsW60pYwE1MkKJcmcciWfbPj51UT_jbcMt1-LL66w';
+  final keyId = 'app_677f4927872161f7e35396e0';
 
   // Create the JWT
   final jwt = JWT(
