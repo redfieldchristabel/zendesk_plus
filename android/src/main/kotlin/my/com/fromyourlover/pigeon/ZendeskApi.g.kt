@@ -244,6 +244,7 @@ interface ZendeskHostApi {
    * - [openChat]: Opens the Zendesk chat interface.
    */
   fun initialize(androidChannelId: String?, iosChannelId: String?, callback: (Result<Unit>) -> Unit)
+  fun initialized(): Boolean
   /**
    * Opens the Zendesk chat interface.
    *
@@ -369,6 +370,21 @@ interface ZendeskHostApi {
                 reply.reply(wrapResult(null))
               }
             }
+          }
+        } else {
+          channel.setMessageHandler(null)
+        }
+      }
+      run {
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialized$separatedMessageChannelSuffix", codec)
+        if (api != null) {
+          channel.setMessageHandler { _, reply ->
+            val wrapped: List<Any?> = try {
+              listOf(api.initialized())
+            } catch (exception: Throwable) {
+              wrapError(exception)
+            }
+            reply.reply(wrapped)
           }
         } else {
           channel.setMessageHandler(null)

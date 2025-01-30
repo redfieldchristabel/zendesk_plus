@@ -161,6 +161,10 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
         }
     }
 
+    override fun initialized(): Boolean {
+        return zendesk != null
+    }
+
 
     override fun openChat() {
 

@@ -47,6 +47,8 @@ abstract class ZendeskHostApi {
   @async
   void initialize({String? androidChannelId, String? iosChannelId});
 
+  bool initialized();
+
   /// Opens the Zendesk chat interface.
   ///
   /// Throws a [PlatformException] if the chat interface cannot be opened

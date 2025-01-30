@@ -266,6 +266,7 @@ protocol ZendeskHostApi {
   /// - [signIn]: Authenticates a user with a JWT token.
   /// - [openChat]: Opens the Zendesk chat interface.
   func initialize(androidChannelId: String?, iosChannelId: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  func initialized() throws -> Bool
   /// Opens the Zendesk chat interface.
   ///
   /// Throws a [PlatformException] if the chat interface cannot be opened
@@ -390,6 +391,19 @@ class ZendeskHostApiSetup {
       }
     } else {
       initializeChannel.setMessageHandler(nil)
+    }
+    let initializedChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.zendesk_plus.ZendeskHostApi.initialized\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      initializedChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.initialized()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      initializedChannel.setMessageHandler(nil)
     }
     /// Opens the Zendesk chat interface.
     ///
