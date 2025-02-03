@@ -232,6 +232,9 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
             try {
                 when (val result = zendesk!!.logoutUser()) {
                     is ZendeskResult.Success -> {
+
+                        loggedIn = false
+
                         callback(
                             Result.success(Unit)
                         )
