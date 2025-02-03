@@ -48,6 +48,12 @@ class _MyAppState extends State<MyApp> implements ZendeskListener {
 
     await zendesk.startListener();
 
+    await zendesk.setLightColor(UserColors(
+      onPrimary: Colors.amber,
+      onAction: Colors.amber,
+      onMessage: Colors.amber,
+    ));
+
     setState(() {
       initialized = true;
     });
