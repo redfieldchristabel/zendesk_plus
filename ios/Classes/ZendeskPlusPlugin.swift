@@ -143,7 +143,7 @@ public class ZendeskPlusPlugin: NSObject, FlutterPlugin, ZendeskHostApi {
             DispatchQueue.main.async {
                 switch result {
                 case .success:
-                    // Notify that the logout was successful
+                    self.isloggedIn = false
                     completion(.success(()))
                 case .failure(let error):
                     // Propagate the error to the completion handler
