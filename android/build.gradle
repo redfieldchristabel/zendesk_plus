@@ -53,6 +53,7 @@ android {
 
     dependencies {
         implementation('zendesk.messaging:messaging-android:2.27.0')
+        implementation('com.squareup.retrofit2:retrofit:2.11.0') // Example Retrofit dependency
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.2.0")
     }

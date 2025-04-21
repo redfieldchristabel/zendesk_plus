@@ -25,6 +25,8 @@ import zendesk.android.messaging.model.UserColors
 import zendesk.messaging.android.DefaultMessagingFactory
 import zendesk.logger.Logger;
 
+import retrofit2.Retrofit;
+
 /** ZendeskPlusPlugin */
 class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
@@ -192,22 +194,17 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
     }
 
     override fun signIn(jwt: String, callback: (Result<ZendeskUser>) -> Unit) {
-
-        checkInitialization()
-
         CoroutineScope(Dispatchers.Main).launch {
             try {
-                // Call the suspend function and await its result
-                // Handle ZendeskResult and map it to Result<String>
+                checkInitialization()
                 when (val result = zendesk!!.loginUser(jwt)) {
                     is ZendeskResult.Success -> {
-                        // Extract data from ZendeskUser (replace with actual logic)
                         val userData = result.value
                         loggedIn = true
                         callback(
                             Result.success(
                                 ZendeskUser(
-                                    id = userData.id, externalId = userData.externalId!!
+                                    id = userData.id, externalId = userData.externalId ?: ""
                                 )
                             )
                         )
@@ -215,13 +212,35 @@ class ZendeskPlusPlugin : FlutterPlugin, ActivityAware, ZendeskHostApi {
 
                     is ZendeskResult.Failure -> {
                         loggedIn = false
-                        callback(Result.failure(result.error))
+                        val errorMessage = when (result.error) {
+                            is retrofit2.HttpException -> {
+                                val httpException = result.error as retrofit2.HttpException
+                                val responseBody = httpException.response()?.errorBody()?.string()
+                                "HTTP ${httpException.code()}: $responseBody"
+                            }
+
+                            else -> result.error.message ?: "Unknown error"
+                        }
+                        callback(
+                            Result.failure(
+                                FlutterError(
+                                    "zendesk-error",
+                                    "Sign-in failed: $errorMessage",
+                                    result.error.stackTraceToString()
+                                )
+                            )
+                        )
                     }
                 }
             } catch (e: Exception) {
-                // Handle exceptions (e.g., network errors)
                 println("Error: ${e.message}")
-                callback(Result.failure(FlutterError("channel-error", "Sign-in failed", e.message)))
+                callback(
+                    Result.failure(
+                        FlutterError(
+                            "channel-error", "Sign-in failed: ${e.message}", e.stackTraceToString()
+                        )
+                    )
+                )
             }
         }
     }
